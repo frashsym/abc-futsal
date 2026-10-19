@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Daftar | ABC Futsal</title>
-    <link rel="icon" type="image/svg+xml" href="images/bola.png">
+    <link rel="icon" type="image/svg+xml" href="images/ball.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="login-card">
         <div class="login-art">
-            <div class="logo"><img src="images/bola.png" alt="ABC"> ABC Futsal</div>
+            <div class="logo"><img src="images/ball.webp" alt="ABC"> ABC Futsal</div>
             <div>
                 <div class="sticker">🥅</div>
                 <h2 style="margin-top:14px">Bikin akun, <em>langsung booking!</em></h2>

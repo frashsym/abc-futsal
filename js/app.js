@@ -1,4 +1,3 @@
-/* ABC Futsal - interaksi front-end (tanpa library, jalan offline) */
 (function () {
   "use strict";
   var $ = function (s, c) {

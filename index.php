@@ -50,7 +50,7 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($judul[$page] ?? 'Halaman') ?> | ABC Futsal</title>
-    <link rel="icon" type="image/svg+xml" href="images/bola.png">
+    <link rel="icon" type="image/svg+xml" href="images/ball.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -68,7 +68,7 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
     <!-- Top Bar -->
     <nav class="app-nav">
         <button type="button" class="nav-btn side-toggle" aria-label="Menu"><?= ikon('menu') ?></button>
-        <a class="navbar-brand" href="index.php"><img src="images/bola.png" alt="ABC"><span>Aplikasi Administrasi Penyewaan Futsal “ABC”</span></a>
+        <a class="navbar-brand" href="index.php"><img src="images/ball.webp" alt="ABC"><span>Aplikasi Administrasi Penyewaan Futsal “ABC”</span></a>
         <div class="nav-space"></div>
         <button type="button" class="nav-btn theme-toggle" aria-label="Ganti tema"><?= ikon('moon') ?></button>
         <div class="nav-chip">
