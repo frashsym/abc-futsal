@@ -31,13 +31,13 @@ $rows = db_all("SELECT * FROM pengguna ORDER BY level, nama_lengkap");
                                 <td><b><?= e($r['nama_lengkap']) ?></b></td>
                                 <td><?= e($r['username']) ?></td>
                                 <td><?= e($r['no_hp'] ?: '-') ?></td>
-                                <td><?= badge_status($r['level']) ?></td>
+                                <td><?= badge_level($r['level']) ?></td>
                                 <td class="nowrap"><?= e(tgl_indo($r['created_at'])) ?></td>
                                 <td>
                                     <div class="aksi">
                                         <a class="btn btn-warn btn-icon" title="Ubah" href="?page=pengguna&aksi=ubah&id=<?= (int)$r['id_pengguna'] ?>"><?= ikon('edit') ?></a>
                                         <?php if ((int)$r['id_pengguna'] !== (int)$user['id']): ?>
-                                            <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('pengguna', 'hapus', $r['id_pengguna']) ?>" data-confirm="Hapus pengguna <?= e($r['nama_lengkap']) ?>?"><?= ikon('trash') ?></a>
+                                            <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('pengguna', 'hapus', $r['id_pengguna']) ?>" data-confirm="Akun <?= e($r['nama_lengkap']) ?> (<?= e($r['username']) ?>) akan dihapus permanen. Akun yang sudah punya riwayat transaksi tidak bisa dihapus." data-confirm-title="Hapus pengguna?" data-confirm-ok="Ya, hapus" data-confirm-type="danger" data-confirm-icon="trash"><?= ikon('trash') ?></a>
                                         <?php endif; ?>
                                     </div>
                                 </td>

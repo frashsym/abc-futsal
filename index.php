@@ -14,7 +14,7 @@ $rute = [
     'pengguna' => ['admin', ['', 'tambah', 'ubah', 'hapus']],
     'lapangan' => ['admin', ['', 'tambah', 'ubah', 'hapus']],
     'waktu'    => ['admin', ['', 'tambah', 'ubah', 'hapus']],
-    'booking'  => ['semua', ['', 'tambah', 'ubah', 'cancel', 'selesai']],
+    'booking'  => ['semua', ['', 'tambah', 'bayar', 'cancel', 'selesai']],
     'profile'  => ['semua', ['', 'ubah']],
     'laporan'  => ['admin', ['']],
 ];
@@ -82,7 +82,7 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
         <div class="user-info">
             <div class="avatar"><?= e(inisial($user['nama'])) ?></div>
             <div class="nama"><?= e($user['nama']) ?></div>
-            <span class="role"><?= e($user['level']) ?></span>
+            <span class="role"><?= e(level_label($user['level'])) ?></span>
         </div>
 
         <div class="menu-label">MAIN NAVIGATION</div>
@@ -105,7 +105,7 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
             <?php endif; ?>
 
             <li class="<?= $aktif === 'booking' ? 'active' : '' ?>" style="--c:#12b886">
-                <a class="item" href="?page=booking"><span class="tile"><?= ikon('calendar') ?></span>Booking Lapangan</a>
+                <a class="item" href="?page=booking"><span class="tile"><?= ikon('calendar') ?></span><?= is_kasir() ? 'Booking &amp; Pembayaran' : 'Booking Lapangan' ?></a>
             </li>
 
             <?php if (is_admin()): ?>
@@ -121,7 +121,7 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
                 <a class="item" href="?page=profile"><span class="tile"><?= ikon('user') ?></span>Profile</a>
             </li>
             <li style="--c:#ff4d6d">
-                <a class="item" href="logout.php" data-confirm="Yakin mau logout?"><span class="tile"><?= ikon('power') ?></span>Logout</a>
+                <a class="item" href="logout.php" data-confirm="Sesi kamu akan diakhiri dan harus login lagi untuk masuk." data-confirm-title="Keluar dari akun?" data-confirm-ok="Ya, logout" data-confirm-type="warn" data-confirm-icon="power"><span class="tile"><?= ikon('power') ?></span>Logout</a>
             </li>
         </ul>
 
@@ -177,6 +177,8 @@ $master_aktif = in_array($page, ['lapangan', 'waktu'], true);
             </form>
         </div>
     <?php endif; ?>
+
+    <?php if ($page === 'booking' && $aksi === '' && is_staff()) include 'page/booking/_modal.php'; ?>
 
     <script src="js/app.js"></script>
 </body>

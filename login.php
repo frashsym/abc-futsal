@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="alt">Belum punya akun? <a href="register.php"><b>Daftar di sini</b></a></p>
         </form>
     </div>
+    <script src="js/app.js"></script>
 </body>
 
 </html>

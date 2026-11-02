@@ -13,10 +13,9 @@ if (empty($_SESSION['user'])) {
 
 $tgl = $_GET['tanggal'] ?? '';
 $lap = (int)($_GET['lapangan'] ?? 0);
-$kec = (int)($_GET['kecuali'] ?? 0);
 
 if (!tanggal_valid($tgl) || $lap <= 0) {
     echo '{}';
     exit;
 }
-echo json_encode(waktu_tidak_tersedia($tgl, $lap, $kec), JSON_FORCE_OBJECT);
+echo json_encode(waktu_tidak_tersedia($tgl, $lap), JSON_FORCE_OBJECT);

@@ -7,7 +7,7 @@ if ($id === (int)$user['id']) {
 } elseif (db_exec("DELETE FROM pengguna WHERE id_pengguna = ?", [$id])) {
     flash('success', 'Pengguna berhasil dihapus.');
 } elseif ($GLOBALS['db_errno'] == 1451) {
-    flash('danger', 'Pengguna ini sudah punya riwayat booking, jadi tidak bisa dihapus.');
+    flash('danger', 'Pengguna ini sudah punya riwayat booking/pembayaran, jadi tidak bisa dihapus.');
 } else {
     flash('danger', 'Gagal menghapus pengguna.');
 }

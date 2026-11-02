@@ -35,7 +35,7 @@ $rows = db_all("SELECT w.*, (SELECT COUNT(*) FROM booking b WHERE b.id_waktu = w
                                 <td>
                                     <div class="aksi">
                                         <a class="btn btn-warn btn-icon" title="Ubah" href="?page=waktu&aksi=ubah&id=<?= (int)$r['id_waktu'] ?>"><?= ikon('edit') ?></a>
-                                        <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('waktu', 'hapus', $r['id_waktu']) ?>" data-confirm="Hapus slot <?= e(jam($r['jam_mulai'])) ?>–<?= e(jam($r['jam_selesai'])) ?>?"><?= ikon('trash') ?></a>
+                                        <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('waktu', 'hapus', $r['id_waktu']) ?>" data-confirm="Slot <?= e(jam($r['jam_mulai'])) ?>–<?= e(jam($r['jam_selesai'])) ?> akan dihapus permanen. Slot yang sudah dipakai booking tidak bisa dihapus." data-confirm-title="Hapus slot waktu?" data-confirm-ok="Ya, hapus" data-confirm-type="danger" data-confirm-icon="trash"><?= ikon('trash') ?></a>
                                     </div>
                                 </td>
                             </tr>

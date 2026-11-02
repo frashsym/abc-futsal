@@ -1401,3 +1401,409 @@ html[data-theme="dark"] .slot.free {
 .table td:nth-child(2) b {
   white-space: nowrap;
 }
+
+/* ============================================================
+   Revisi: toast, modal konfirmasi, kasir & DP
+   ============================================================ */
+:root {
+  --ok-soft: rgba(18, 184, 134, 0.14);
+  --danger-soft: rgba(255, 77, 109, 0.14);
+  --warn-soft: rgba(255, 176, 32, 0.2);
+}
+body.modal-open {
+  overflow: hidden;
+}
+
+/* ---------- Toast (pengganti banner flash) ---------- */
+.toast-stack {
+  position: fixed;
+  top: calc(var(--nav-h) + 14px);
+  right: 18px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 28px));
+  pointer-events: none;
+}
+.login-page .toast-stack {
+  top: 18px;
+}
+.toast {
+  position: relative;
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 40px 16px 14px;
+  border-radius: 18px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 14px 40px rgba(20, 30, 70, 0.22);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  animation: toast-in 0.38s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.toast.out {
+  animation: toast-out 0.28s ease forwards;
+}
+.toast-ic {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--primary);
+}
+.toast-success .toast-ic {
+  background: var(--ok);
+}
+.toast-danger .toast-ic {
+  background: var(--danger);
+}
+.toast-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.toast-txt b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.toast-txt span {
+  color: var(--muted);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.toast-x {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.toast-x:hover {
+  background: var(--soft);
+  color: var(--text);
+}
+.toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--primary);
+  transform-origin: left;
+  animation: toast-bar 6s linear forwards;
+}
+.toast-success .toast-bar {
+  background: var(--ok);
+}
+.toast-danger .toast-bar {
+  background: var(--danger);
+}
+.toast:hover .toast-bar {
+  animation-play-state: paused;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+}
+@keyframes toast-bar {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- Modal konfirmasi ---------- */
+.modal-box.confirm-box {
+  max-width: 400px;
+}
+.cf-body {
+  text-align: center;
+  padding: 28px 26px 24px;
+}
+.cf-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: var(--danger-soft);
+  color: var(--danger);
+  animation: pop 0.35s ease;
+}
+.cf-icon .ic {
+  width: 30px;
+  height: 30px;
+}
+.cf-icon.warn {
+  background: var(--warn-soft);
+  color: #c98400;
+}
+.cf-icon.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.cf-body h3 {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.cf-msg {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.cf-msg b {
+  color: var(--text);
+}
+.cf-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.cf-actions .btn {
+  min-width: 128px;
+  padding: 11px 18px;
+}
+.cf-body .pay-opt.block + .pay-opt.block {
+  margin-top: 8px;
+}
+.cf-body .pay-opt.block {
+  text-align: left;
+}
+.cf-body .cf-msg {
+  margin-bottom: 14px;
+}
+
+/* ---------- Pilihan pembayaran ---------- */
+.pay-opts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+.pay-opt {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: var(--soft);
+  cursor: pointer;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  color: var(--text) !important;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.pay-opt:hover {
+  border-color: var(--primary);
+}
+.pay-opt input {
+  margin: 3px 0 0;
+  accent-color: var(--primary);
+  flex: none;
+}
+.pay-opt span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pay-opt b {
+  font-size: 14px;
+  font-weight: 800;
+}
+.pay-opt small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.pay-opt:has(input:checked) {
+  border-color: var(--primary);
+  background: rgba(47, 123, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(47, 123, 255, 0.12);
+}
+.pay-opt:has(input:focus-visible) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Ringkasan total + bayar ---------- */
+.total-box {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.total-box .tb-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.total-box .tb-row.sub {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.total-box .tb-row.sub b {
+  color: var(--text);
+  font-size: 14px;
+}
+.total-box #total-sisa.has {
+  color: #c9791a;
+}
+
+/* ---------- Modal pembayaran ---------- */
+.bayar-sum {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 16px;
+  background: var(--soft);
+}
+.bayar-sum small {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.bayar-sum b {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.bayar-sum .wide {
+  grid-column: 1 / -1;
+}
+.bayar-sum .hl {
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.bayar-sum .hl b {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.input-act {
+  display: flex;
+  gap: 8px;
+}
+.input-act .btn {
+  flex: none;
+}
+#modalBayar .form-hint.err {
+  color: var(--danger);
+  font-weight: 700;
+}
+#modalBayar .modal-box,
+#modalCancel .modal-box {
+  max-width: 460px;
+}
+
+/* ---------- Badge baru ---------- */
+.badge-kasir {
+  background: rgba(255, 138, 61, 0.18);
+  color: #c75d10;
+}
+.badge-bayar-lunas {
+  background: rgba(18, 184, 134, 0.15);
+  color: #0b8a65;
+}
+.badge-bayar-dp {
+  background: rgba(255, 176, 32, 0.22);
+  color: #9a6400;
+}
+.badge-bayar-belum {
+  background: rgba(107, 115, 148, 0.16);
+  color: var(--muted);
+}
+.badge-bayar-hangus {
+  background: rgba(255, 77, 109, 0.14);
+  color: #d62a4c;
+}
+.badge-bayar-cancel {
+  background: var(--soft);
+  color: var(--muted);
+}
+html[data-theme="dark"] .badge-kasir {
+  color: #ffb27a;
+}
+html[data-theme="dark"] .badge-bayar-lunas {
+  color: #4fe3b5;
+}
+html[data-theme="dark"] .badge-bayar-dp {
+  color: #ffd27a;
+}
+html[data-theme="dark"] .badge-bayar-hangus {
+  color: #ff8da3;
+}
+html[data-theme="dark"] .cf-icon.warn {
+  color: #ffc766;
+}
+
+@media (max-width: 520px) {
+  .toast-stack {
+    right: 14px;
+    left: 14px;
+    width: auto;
+  }
+  .bayar-sum {
+    grid-template-columns: 1fr;
+  }
+  .cf-actions .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast,
+  .toast-bar,
+  .cf-icon {
+    animation-duration: 0.01s;
+  }
+}
+@media print {
+  .toast-stack,
+  .modal {
+    display: none !important;
+  }
+}
+.table td:nth-child(2) b,
+.table td b.nowrap {
+  white-space: nowrap;
+}

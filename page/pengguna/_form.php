@@ -28,9 +28,11 @@
                 <div class="form-group">
                     <label for="level">Level</label>
                     <select class="form-control" id="level" name="level">
-                        <option value="pelanggan" <?= $d['level'] === 'pelanggan' ? 'selected' : '' ?>>Pelanggan</option>
-                        <option value="admin" <?= $d['level'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+                        <option value="pelanggan" <?= $d['level'] === 'pelanggan' ? 'selected' : '' ?>>User (customer online)</option>
+                        <option value="kasir" <?= $d['level'] === 'kasir' ? 'selected' : '' ?>>Kasir (transaksi di tempat)</option>
+                        <option value="admin" <?= $d['level'] === 'admin' ? 'selected' : '' ?>>Admin (pemegang kendali)</option>
                     </select>
+                    <span class="form-hint">Admin: semua fitur. Kasir: booking &amp; pembayaran. User: booking online sendiri.</span>
                 </div>
                 <div class="form-group full">
                     <label for="password">Password <?= $edit ? '(kosongkan kalau tidak diganti)' : '' ?></label>

@@ -35,7 +35,7 @@ $rows = db_all("SELECT l.*, (SELECT COUNT(*) FROM booking b WHERE b.id_lapangan 
                                 <td>
                                     <div class="aksi">
                                         <a class="btn btn-warn btn-icon" title="Ubah" href="?page=lapangan&aksi=ubah&id=<?= (int)$r['id_lapangan'] ?>"><?= ikon('edit') ?></a>
-                                        <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('lapangan', 'hapus', $r['id_lapangan']) ?>" data-confirm="Hapus <?= e($r['nama_lapangan']) ?>?"><?= ikon('trash') ?></a>
+                                        <a class="btn btn-danger btn-icon" title="Hapus" href="<?= url_aksi('lapangan', 'hapus', $r['id_lapangan']) ?>" data-confirm="<?= e($r['nama_lapangan']) ?> akan dihapus permanen. Lapangan yang sudah punya riwayat booking tidak bisa dihapus." data-confirm-title="Hapus lapangan?" data-confirm-ok="Ya, hapus" data-confirm-type="danger" data-confirm-icon="trash"><?= ikon('trash') ?></a>
                                     </div>
                                 </td>
                             </tr>

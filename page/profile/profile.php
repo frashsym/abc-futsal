@@ -12,7 +12,7 @@ $jml = (int)db_val("SELECT COUNT(*) FROM booking WHERE id_pengguna = ?", [(int)$
             <div class="avatar"><?= e(inisial($me['nama_lengkap'])) ?></div>
             <div>
                 <h2 style="font-size:22px;font-weight:800"><?= e($me['nama_lengkap']) ?></h2>
-                <div style="margin-top:6px">@<?= e($me['username']) ?> &nbsp; <?= badge_status($me['level']) ?></div>
+                <div style="margin-top:6px">@<?= e($me['username']) ?> &nbsp; <?= badge_level($me['level']) ?></div>
             </div>
         </div>
         <div class="info-list">
@@ -21,7 +21,7 @@ $jml = (int)db_val("SELECT COUNT(*) FROM booking WHERE id_pengguna = ?", [(int)$
             <div><small>No. HP</small><b><?= e($me['no_hp'] ?: '-') ?></b></div>
             <div><small>Bergabung</small><b><?= e(tgl_indo($me['created_at'])) ?></b></div>
             <div><small>Total Booking</small><b><?= $jml ?>x</b></div>
-            <div><small>Level Akses</small><b><?= e(ucfirst($me['level'])) ?></b></div>
+            <div><small>Level Akses</small><b><?= e(level_label($me['level'])) ?></b></div>
         </div>
     </div>
 </div>

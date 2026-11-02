@@ -25,18 +25,18 @@ $sql .= " ORDER BY b.tanggal_main, w.jam_mulai";
 $rows = db_all($sql, $p);
 
 $n = ['Booking' => 0, 'Selesai' => 0, 'Cancel' => 0];
-$pendapatan = 0;
+$pendapatan = 0; // uang yang sudah diterima (DP + pelunasan - refund, termasuk DP hangus)
+$piutang = 0;    // sisa tagihan booking yang masih aktif
 $per_lap = [];
 foreach ($rows as $r) {
     $n[$r['status']]++;
     $k = $r['nama_lapangan'];
     if (!isset($per_lap[$k])) $per_lap[$k] = ['jml' => 0, 'selesai' => 0, 'total' => 0];
     if ($r['status'] !== 'Cancel') $per_lap[$k]['jml']++;
-    if ($r['status'] === 'Selesai') {
-        $pendapatan += $r['total_bayar'];
-        $per_lap[$k]['selesai']++;
-        $per_lap[$k]['total'] += $r['total_bayar'];
-    }
+    if ($r['status'] === 'Selesai') $per_lap[$k]['selesai']++;
+    $per_lap[$k]['total'] += $r['dibayar'];
+    $pendapatan += $r['dibayar'];
+    $piutang += sisa_bayar($r);
 }
 ksort($per_lap);
 ?>
@@ -68,7 +68,7 @@ ksort($per_lap);
                 <div class="num"><?= $n['Cancel'] ?></div><?= ikon('x', 'bg-ic') ?>
             </div>
             <div class="stat s4">
-                <div class="label">Pendapatan (Selesai)</div>
+                <div class="label">Pemasukan Diterima</div>
                 <div class="num"><?= rupiah($pendapatan) ?></div><?= ikon('dollar', 'bg-ic') ?>
             </div>
         </div>
@@ -81,7 +81,7 @@ ksort($per_lap);
                         <th>Lapangan</th>
                         <th>Booking Aktif + Selesai</th>
                         <th>Selesai</th>
-                        <th class="text-right">Pendapatan</th>
+                        <th class="text-right">Pemasukan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,7 +100,7 @@ ksort($per_lap);
                 <?php if ($per_lap): ?>
                     <tfoot>
                         <tr class="tfoot-total">
-                            <td colspan="3">Total Pendapatan</td>
+                            <td colspan="3">Total Pemasukan</td>
                             <td class="text-right"><?= rupiah($pendapatan) ?></td>
                         </tr>
                     </tfoot>
@@ -121,6 +121,8 @@ ksort($per_lap);
                         <th>Penyewa</th>
                         <th>Status</th>
                         <th class="text-right">Total</th>
+                        <th class="text-right">Dibayar</th>
+                        <th class="text-right">Sisa</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,14 +136,16 @@ ksort($per_lap);
                             <td><?= e($r['nama_penyewa']) ?></td>
                             <td><?= badge_status($r['status']) ?></td>
                             <td class="text-right nowrap"><?= rupiah($r['total_bayar']) ?></td>
+                            <td class="text-right nowrap"><?= rupiah($r['dibayar']) ?></td>
+                            <td class="text-right nowrap"><?= rupiah(sisa_bayar($r)) ?></td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if (!$rows): ?><tr>
-                            <td class="empty" colspan="8">Tidak ada booking di periode ini.</td>
+                            <td class="empty" colspan="10">Tidak ada booking di periode ini.</td>
                         </tr><?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <p class="muted" style="margin-top:14px;font-size:12px">Dicetak <?= e(date('d-m-Y H:i')) ?> oleh <?= e($user['nama']) ?>. Pendapatan dihitung dari booking berstatus Selesai.</p>
+        <p class="muted" style="margin-top:14px;font-size:12px">Dicetak <?= e(date('d-m-Y H:i')) ?> oleh <?= e($user['nama']) ?>. Pemasukan = DP + pelunasan yang sudah diterima dikurangi refund (DP booking yang dibatalkan dan tidak dikembalikan tetap dihitung). Sisa tagihan booking aktif pada periode ini: <?= e(rupiah($piutang)) ?>.</p>
     </div>
 </div>

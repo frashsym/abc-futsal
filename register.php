@@ -103,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="alt">Udah punya akun? <a href="login.php"><b>Login</b></a></p>
         </form>
     </div>
+    <script src="js/app.js"></script>
 </body>
 
 </html>
