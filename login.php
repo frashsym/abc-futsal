@@ -1,10 +1,15 @@
 <?php
-error_reporting(E_ALL ^ (E_NOTICE | E_WARNING));
-session_start();
-include "koneksi.php";
-include "fungsi.php";
+// ============================================================
+//  login.php - halaman masuk (admin & kasir)
+// ============================================================
+require_once __DIR__ . '/koneksi.php';
+require_once __DIR__ . '/format.php';
 
-if (!empty($_SESSION['user'])) redirect('index.php');
+// Sudah login? langsung ke dashboard
+if (!empty($_SESSION['user'])) {
+    header('Location: index.php');
+    exit;
+}
 
 $error = '';
 $username = '';
@@ -12,19 +17,21 @@ $username = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = (string)($_POST['password'] ?? '');
-    $u = db_one("SELECT * FROM pengguna WHERE username = ?", [$username]);
 
-    if ($u && password_verify($password, $u['password'])) {
+    $stmt = $pdo->prepare("SELECT * FROM tb_pengguna WHERE username = ?");
+    $stmt->execute([$username]);
+    $u = $stmt->fetch();
+
+    if (!$u || !password_verify($password, $u['password'])) {
+        $error = 'Username atau password salah.';
+    } elseif ($u['status'] !== 'Aktif') {
+        $error = 'Akun kamu dinonaktifkan. Hubungi admin.';
+    } else {
         session_regenerate_id(true);
-        $_SESSION['user'] = [
-            'id'       => (int)$u['id_pengguna'],
-            'nama'     => $u['nama_lengkap'],
-            'username' => $u['username'],
-            'level'    => $u['level'],
-        ];
-        redirect('index.php');
+        $_SESSION['user'] = ['id' => (int)$u['id_pengguna']];
+        header('Location: index.php');
+        exit;
     }
-    $error = 'Username atau password salah, coba cek lagi.';
 }
 ?>
 <!DOCTYPE html>
@@ -35,52 +42,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login | ABC Futsal</title>
     <link rel="icon" type="image/svg+xml" href="images/ball.webp">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        try {
-            var t = localStorage.getItem('abc-theme');
-            if (t) document.documentElement.setAttribute('data-theme', t)
-        } catch (e) {}
-    </script>
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
 </head>
 
 <body class="login-page">
-    <?php include "icons.php"; ?>
     <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
 
     <div class="login-card">
         <div class="login-art">
             <div class="logo"><img src="images/ball.webp" alt="ABC"> ABC Futsal</div>
             <div>
-                <div class="sticker">⚽</div>
-                <h2 style="margin-top:14px">Booking lapangan, <em>gas main!</em></h2>
-                <p>Aplikasi administrasi penyewaan lapangan futsal. Cek jadwal, booking, dan rekap pemasukan dalam satu tempat.</p>
+                <h2 class="mt-3">Cek jadwal, catat booking, <em>gas main!</em></h2>
+                <p>Sistem kasir penyewaan lapangan futsal. Pesanan dari WhatsApp maupun datang langsung dicatat di sini.</p>
             </div>
         </div>
 
         <form class="login-form" method="post" autocomplete="off">
-            <h1>Masuk dulu, bro 👋</h1>
-            <p class="lead">Login pakai akunmu untuk lanjut.</p>
+            <h1>Masuk dulu 👋</h1>
+            <p class="text-muted mb-4">Login sebagai admin atau kasir.</p>
 
-            <?php flash_tampil(); ?>
             <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
 
-            <div class="form-group">
-                <label for="username">Username</label>
+            <div class="mb-3">
+                <label class="form-label" for="username">Username</label>
                 <input class="form-control" type="text" id="username" name="username" value="<?= e($username) ?>" required autofocus>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
+            <div class="mb-3">
+                <label class="form-label" for="password">Password</label>
                 <input class="form-control" type="password" id="password" name="password" required>
             </div>
-            <button class="btn btn-primary btn-block" type="submit" style="padding:13px">Login</button>
-
-            <p class="alt">Belum punya akun? <a href="register.php"><b>Daftar di sini</b></a></p>
+            <button class="btn btn-primary w-100 py-2" type="submit">Login</button>
         </form>
     </div>
-    <script src="js/app.js"></script>
 </body>
 
 </html>

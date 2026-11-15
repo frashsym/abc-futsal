@@ -1,186 +1,178 @@
 <?php
-error_reporting(E_ALL ^ (E_NOTICE | E_WARNING));
-ob_start();
-session_start();
-include "koneksi.php";
-include "fungsi.php";
-login_cek();
+// ============================================================
+//  index.php - Dashboard (tampilan berbeda untuk admin dan kasir)
+// ============================================================
+require_once __DIR__ . '/auth.php';
 
-$page = $_GET['page'] ?? '';
-$aksi = $_GET['aksi'] ?? '';
+$judul_halaman = 'Home';
+$menu_aktif    = 'home';
 
-// Daftar halaman yang boleh dibuka: [hak akses, aksi yang tersedia]
-$rute = [
-    'pengguna' => ['admin', ['', 'tambah', 'ubah', 'hapus']],
-    'lapangan' => ['admin', ['', 'tambah', 'ubah', 'hapus']],
-    'waktu'    => ['admin', ['', 'tambah', 'ubah', 'hapus']],
-    'booking'  => ['semua', ['', 'tambah', 'bayar', 'cancel', 'selesai']],
-    'profile'  => ['semua', ['', 'ubah']],
-    'laporan'  => ['admin', ['']],
-];
-$judul = [
-    ''         => 'Home',
-    'pengguna' => 'Data Pengguna',
-    'lapangan' => 'Data Lapangan',
-    'waktu'    => 'Data Waktu',
-    'booking'  => 'Booking Lapangan',
-    'profile'  => 'Profile',
-    'laporan'  => 'Laporan Rekap Penyewaan',
-];
+$tanggal    = date('Y-m-d');
+$awal_bulan = date('Y-m-01');
+$nama_depan = explode(' ', trim($user['nama']))[0];
 
-$file = 'home.php';
-$notfound = false;
-if ($page !== '') {
-    if (!isset($rute[$page]) || !in_array($aksi, $rute[$page][1], true)) {
-        $notfound = true;
-    } else {
-        if ($rute[$page][0] === 'admin') admin_only();
-        $file = "page/$page/" . ($aksi === '' ? $page : $aksi) . ".php";
-    }
+// -------- Kartu statistik --------
+if ($user['level'] === 'admin') {
+    $lapangan_aktif = $pdo->query("SELECT COUNT(*) FROM tb_lapangan WHERE status = 'Tersedia'")->fetchColumn();
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM tb_booking WHERE tanggal_main = ? AND status <> 'Cancel'");
+    $stmt->execute([$tanggal]);
+    $booking_hari_ini = $stmt->fetchColumn();
+
+    // Pendapatan bersih bulan ini = uang masuk - refund (berdasarkan tanggal main)
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah_dibayar - jumlah_refund), 0)
+                           FROM tb_booking WHERE tanggal_main BETWEEN ? AND ?");
+    $stmt->execute([$awal_bulan, $tanggal]);
+    $pendapatan_bulan = $stmt->fetchColumn();
+
+    $menunggu = $pdo->query("SELECT COUNT(*) FROM tb_pembatalan WHERE status = 'Menunggu'")->fetchColumn();
+
+    $kartu = [
+        ['s1', 'Lapangan Aktif',        $lapangan_aktif,            'bi-bullseye'],
+        ['s2', 'Booking Hari Ini',      $booking_hari_ini,          'bi-calendar-check'],
+        ['s3', 'Pendapatan Bulan Ini',  rupiah($pendapatan_bulan),  'bi-cash-stack'],
+        ['s4', 'Pembatalan Menunggu',   $menunggu,                  'bi-arrow-counterclockwise'],
+    ];
+} else {
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM tb_booking WHERE tanggal_main = ? AND status <> 'Cancel'");
+    $stmt->execute([$tanggal]);
+    $booking_hari_ini = $stmt->fetchColumn();
+
+    // Booking aktif yang belum lunas (perlu ditagih pelunasan)
+    $belum_lunas = $pdo->query("SELECT COUNT(*) FROM tb_booking WHERE status = 'Booking' AND status_bayar = 'DP'")->fetchColumn();
+
+    // Uang yang diterima kasir ini hari ini
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(jumlah), 0) FROM tb_pembayaran
+                           WHERE id_kasir = ? AND DATE(tanggal_bayar) = ?");
+    $stmt->execute([$user['id'], $tanggal]);
+    $setoran_saya = $stmt->fetchColumn();
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM tb_pembatalan WHERE id_kasir = ? AND status = 'Menunggu'");
+    $stmt->execute([$user['id']]);
+    $batal_menunggu = $stmt->fetchColumn();
+
+    $kartu = [
+        ['s1', 'Booking Hari Ini',        $booking_hari_ini,    'bi-calendar-check'],
+        ['s2', 'Belum Lunas (DP)',        $belum_lunas,         'bi-hourglass-split'],
+        ['s3', 'Uang Masuk Saya Hari Ini', rupiah($setoran_saya), 'bi-cash-stack'],
+        ['s4', 'Pengajuan Batal Saya',    $batal_menunggu,      'bi-arrow-counterclockwise'],
+    ];
 }
 
-$user = $_SESSION['user'];
-$aktif = $page;
-$master_aktif = in_array($page, ['lapangan', 'waktu'], true);
+// -------- Jadwal hari ini (ringkas) --------
+include __DIR__ . '/inc/hitung_slot.php';   // hasil: $daftar_lapangan, $daftar_waktu, $slot
+
+// -------- Daftar booking hari ini --------
+$stmt = $pdo->prepare(
+    "SELECT b.*, l.nama_lapangan, w.jam_mulai, w.jam_selesai
+     FROM tb_booking b
+     JOIN tb_lapangan l ON l.id_lapangan = b.id_lapangan
+     JOIN tb_waktu w ON w.id_waktu = b.id_waktu
+     WHERE b.tanggal_main = ? AND b.status <> 'Cancel'
+     ORDER BY w.jam_mulai, l.nama_lapangan"
+);
+$stmt->execute([$tanggal]);
+$booking_list = $stmt->fetchAll();
+
+include __DIR__ . '/inc/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($judul[$page] ?? 'Halaman') ?> | ABC Futsal</title>
-    <link rel="icon" type="image/svg+xml" href="images/ball.webp">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        try {
-            var t = localStorage.getItem('abc-theme');
-            if (t) document.documentElement.setAttribute('data-theme', t)
-        } catch (e) {}
-    </script>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-    <?php include "icons.php"; ?>
-
-    <!-- Top Bar -->
-    <nav class="app-nav">
-        <button type="button" class="nav-btn side-toggle" aria-label="Menu"><?= ikon('menu') ?></button>
-        <a class="navbar-brand" href="index.php"><img src="images/ball.webp" alt="ABC"><span>Aplikasi Administrasi Penyewaan Futsal “ABC”</span></a>
-        <div class="nav-space"></div>
-        <button type="button" class="nav-btn theme-toggle" aria-label="Ganti tema"><?= ikon('moon') ?></button>
-        <div class="nav-chip">
-            <div class="avatar"><?= e(inisial($user['nama'])) ?></div><span><?= e($user['nama']) ?></span>
-        </div>
-    </nav>
-    <!-- #END# Top Bar -->
-
-    <!-- Sidebar -->
-    <aside class="app-side">
-        <div class="user-info">
-            <div class="avatar"><?= e(inisial($user['nama'])) ?></div>
-            <div class="nama"><?= e($user['nama']) ?></div>
-            <span class="role"><?= e(level_label($user['level'])) ?></span>
-        </div>
-
-        <div class="menu-label">MAIN NAVIGATION</div>
-        <ul class="menu">
-            <li class="<?= $page === '' && !$notfound ? 'active' : '' ?>" style="--c:#2f7bff">
-                <a class="item" href="index.php"><span class="tile"><?= ikon('home') ?></span>Home</a>
-            </li>
-
-            <?php if (is_admin()): ?>
-                <li class="<?= $aktif === 'pengguna' ? 'active' : '' ?>" style="--c:#7c5cff">
-                    <a class="item" href="?page=pengguna"><span class="tile"><?= ikon('users') ?></span>Data Pengguna</a>
-                </li>
-                <li class="<?= $master_aktif ? 'open active' : '' ?>" style="--c:#ff8a3d">
-                    <a class="item menu-toggle"><span class="tile"><?= ikon('database') ?></span>Master<?= ikon('chevron', 'caret') ?></a>
-                    <ul class="submenu">
-                        <li class="<?= $aktif === 'lapangan' ? 'active' : '' ?>"><a href="?page=lapangan">Data Lapangan</a></li>
-                        <li class="<?= $aktif === 'waktu' ? 'active' : '' ?>"><a href="?page=waktu">Data Waktu</a></li>
-                    </ul>
-                </li>
-            <?php endif; ?>
-
-            <li class="<?= $aktif === 'booking' ? 'active' : '' ?>" style="--c:#12b886">
-                <a class="item" href="?page=booking"><span class="tile"><?= ikon('calendar') ?></span><?= is_kasir() ? 'Booking &amp; Pembayaran' : 'Booking Lapangan' ?></a>
-            </li>
-
-            <?php if (is_admin()): ?>
-                <li class="<?= $aktif === 'laporan' ? 'open active' : '' ?>" style="--c:#ff5fa8">
-                    <a class="item menu-toggle"><span class="tile"><?= ikon('report') ?></span>Laporan<?= ikon('chevron', 'caret') ?></a>
-                    <ul class="submenu">
-                        <li class="<?= $aktif === 'laporan' ? 'active' : '' ?>"><a data-modal-open="smallModal2">Laporan Rekap Penyewaan</a></li>
-                    </ul>
-                </li>
-            <?php endif; ?>
-
-            <li class="<?= $aktif === 'profile' ? 'active' : '' ?>" style="--c:#00b7e6">
-                <a class="item" href="?page=profile"><span class="tile"><?= ikon('user') ?></span>Profile</a>
-            </li>
-            <li style="--c:#ff4d6d">
-                <a class="item" href="logout.php" data-confirm="Sesi kamu akan diakhiri dan harus login lagi untuk masuk." data-confirm-title="Keluar dari akun?" data-confirm-ok="Ya, logout" data-confirm-type="warn" data-confirm-icon="power"><span class="tile"><?= ikon('power') ?></span>Logout</a>
-            </li>
-        </ul>
-
-        <div class="side-foot">&copy; <?= date('Y') ?> <b>ABC Futsal</b>.<br>Version: 1.0</div>
-    </aside>
-    <div class="side-overlay"></div>
-    <!-- #END# Sidebar -->
-
-    <!-- Konten -->
-    <main class="app-main">
-        <?php
-        flash_tampil();
-        if ($notfound) {
-            echo '<div class="card"><div class="body" style="text-align:center;padding:50px 20px"><div style="font-size:54px">🫠</div>'
-                . '<h2 style="margin:10px 0 6px">Halaman tidak ditemukan</h2><p class="muted">Link yang kamu buka nggak ada.</p>'
-                . '<a class="btn btn-primary" href="index.php">Balik ke Home</a></div></div>';
-        } else {
-            include $file;
-        }
-        ?>
-        <div class="app-foot no-print">ABC Futsal &middot; Administrasi Penyewaan Lapangan <?= date('Y') ?></div>
-    </main>
-    <!-- #END# Konten -->
-
-    <?php if (is_admin()): ?>
-        <!-- Modal Laporan Rekap Penyewaan -->
-        <div class="modal" id="smallModal2">
-            <form class="modal-box" method="get" action="index.php">
-                <input type="hidden" name="page" value="laporan">
-                <div class="modal-head">
-                    <h3>Laporan Rekap Penyewaan</h3><button type="button" class="nav-btn" data-modal-close aria-label="Tutup"><?= ikon('x') ?></button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group"><label for="m_dari">Dari Tanggal</label>
-                        <input class="form-control" type="date" id="m_dari" name="dari" value="<?= date('Y-m-01') ?>" required>
-                    </div>
-                    <div class="form-group"><label for="m_sampai">Sampai Tanggal</label>
-                        <input class="form-control" type="date" id="m_sampai" name="sampai" value="<?= date('Y-m-d') ?>" required>
-                    </div>
-                    <div class="form-group"><label for="m_status">Status</label>
-                        <select class="form-control" id="m_status" name="status">
-                            <option value="">Semua status</option>
-                            <option>Booking</option>
-                            <option>Selesai</option>
-                            <option>Cancel</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn btn-primary" type="submit"><?= ikon('report') ?> Tampilkan</button>
-                        <button class="btn btn-light" type="button" data-modal-close>Batal</button>
-                    </div>
-                </div>
-            </form>
-        </div>
+<div class="welcome">
+    <h1>Halo, <?= e($nama_depan) ?>! 👋</h1>
+    <p><?= $user['level'] === 'admin'
+            ? 'Pantau jadwal lapangan, pemasukan, dan pengajuan pembatalan dari satu dashboard.'
+            : 'Ada pesanan masuk? Cek jadwal dulu, lalu catat bookingnya.' ?></p>
+    <?php if ($user['level'] === 'kasir'): ?>
+        <a class="btn btn-lime" href="kasir/booking_form.php"><i class="bi bi-plus-lg"></i> Input Booking</a>
+    <?php else: ?>
+        <a class="btn btn-lime" href="admin/laporan.php"><i class="bi bi-file-earmark-bar-graph"></i> Lihat Laporan</a>
     <?php endif; ?>
+</div>
 
-    <?php if ($page === 'booking' && $aksi === '' && is_staff()) include 'page/booking/_modal.php'; ?>
+<div class="row g-3 mb-4">
+    <?php foreach ($kartu as $k): ?>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat <?= $k[0] ?>">
+                <div class="label"><?= e($k[1]) ?></div>
+                <div class="num"><?= e($k[2]) ?></div>
+                <i class="bi <?= $k[3] ?> bg-ic"></i>
+            </div>
+        </div>
+    <?php endforeach; ?>
+</div>
 
-    <script src="js/app.js"></script>
-</body>
+<div class="card">
+    <div class="card-header">
+        <h2>Jadwal Hari Ini &middot; <?= e(hari_indo($tanggal) . ', ' . tgl_indo($tanggal)) ?></h2>
+        <div class="legend">
+            <span><i style="background:rgba(196,245,66,.7)"></i>Kosong</span>
+            <span><i style="background:var(--pink)"></i>Terisi</span>
+            <span><i style="background:var(--line)"></i>Lewat / tidak tersedia</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <?php if (!$daftar_lapangan || !$daftar_waktu): ?>
+            <p class="text-muted mb-0">Data lapangan atau jam operasional belum diisi.</p>
+        <?php else: ?>
+            <div class="row g-3">
+                <?php foreach ($daftar_lapangan as $lap): ?>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="court">
+                            <h3><?= e($lap['nama_lapangan']) ?> <?= badge($lap['status']) ?></h3>
+                            <div class="meta"><?= e($lap['jenis_lantai']) ?></div>
+                            <div class="slots">
+                                <?php foreach ($daftar_waktu as $w): ?>
+                                    <span class="slot <?= e($slot[$lap['id_lapangan']][$w['id_waktu']]['status']) ?>"><?= e(jam($w['jam_mulai'])) ?></span>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
 
-</html>
+<div class="card">
+    <div class="card-header">
+        <h2>Booking Hari Ini</h2>
+        <a class="btn btn-light btn-sm" href="booking/daftar.php">Lihat semua</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Jam</th>
+                        <th>Lapangan</th>
+                        <th>Penyewa</th>
+                        <th>Sumber</th>
+                        <th>Total</th>
+                        <th>Pembayaran</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($booking_list as $b): ?>
+                        <tr>
+                            <td><b><?= e($b['kode_booking']) ?></b></td>
+                            <td class="nowrap"><?= e(jam($b['jam_mulai'])) ?>–<?= e(jam($b['jam_selesai'])) ?></td>
+                            <td><?= e($b['nama_lapangan']) ?></td>
+                            <td><?= e($b['nama_penyewa']) ?></td>
+                            <td><?= badge($b['sumber']) ?></td>
+                            <td class="nowrap"><?= rupiah($b['total_harga']) ?></td>
+                            <td><?= badge($b['status_bayar']) ?></td>
+                            <td><a class="btn btn-light btn-sm" href="booking/detail.php?id=<?= (int)$b['id_booking'] ?>">Detail</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <?php if (!$booking_list): ?><tr>
+                            <td class="empty" colspan="8">Belum ada booking untuk hari ini.</td>
+                        </tr><?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/inc/footer.php'; ?>

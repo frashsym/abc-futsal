@@ -1,21 +1,25 @@
 <?php
-error_reporting(0);
-session_start();
-include "koneksi.php";
-include "fungsi.php";
-
+// ============================================================
+//  cek_jadwal.php - endpoint kecil (AJAX) untuk form booking kasir.
+//  Mengembalikan JSON status tiap jam pada 1 lapangan + 1 tanggal, contoh:
+//      {"1":"kosong","7":"terisi","8":"lewat"}
+// ============================================================
+require_once __DIR__ . '/auth.php';
 header('Content-Type: application/json; charset=utf-8');
-if (empty($_SESSION['user'])) {
-    http_response_code(401);
+
+$tanggal = $_GET['tanggal'] ?? '';
+$filter_lapangan = (int)($_GET['lapangan'] ?? 0);
+
+$cek = DateTime::createFromFormat('Y-m-d', $tanggal);
+if (!$cek || $cek->format('Y-m-d') !== $tanggal || $filter_lapangan <= 0) {
     echo '{}';
     exit;
 }
 
-$tgl = $_GET['tanggal'] ?? '';
-$lap = (int)($_GET['lapangan'] ?? 0);
+include __DIR__ . '/inc/hitung_slot.php';
 
-if (!tanggal_valid($tgl) || $lap <= 0) {
-    echo '{}';
-    exit;
+$hasil = [];
+foreach ($slot[$filter_lapangan] ?? [] as $id_waktu => $s) {
+    $hasil[$id_waktu] = $s['status'];
 }
-echo json_encode(waktu_tidak_tersedia($tgl, $lap), JSON_FORCE_OBJECT);
+echo json_encode($hasil, JSON_FORCE_OBJECT);
