@@ -1,6 +1,6 @@
 # Aplikasi Penyewaan Lapangan Futsal "ABC" — Versi 2 (Admin & Kasir)
 
-PHP Native (prosedural) + MySQL (PDO) + Bootstrap 5 (CDN) + Vanilla JS.
+PHP Native (prosedural) + MySQL (PDO) + Bootstrap 5 & SweetAlert2 (CDN) + Vanilla JS.
 
 ## Akun Contoh
 | Level | Username | Password |
@@ -22,6 +22,7 @@ PHP Native (prosedural) + MySQL (PDO) + Bootstrap 5 (CDN) + Vanilla JS.
 | Fitur | Admin | Kasir |
 |-------|:----:|:----:|
 | Master lapangan, jam operasional, harga | ✔ | |
+| Kelola data pelanggan | ✔ | |
 | Kelola user / kasir | ✔ | |
 | Laporan transaksi + cetak | ✔ | |
 | Setujui / tolak pembatalan & refund | ✔ | |
@@ -40,7 +41,7 @@ futsal/
 ├─ login.php  logout.php  index.php (dashboard)  profile.php  profile_proses.php
 ├─ cek_jadwal.php       endpoint AJAX status jam (dipakai form booking)
 ├─ inc/                 header.php, sidebar.php, footer.php, hitung_slot.php
-├─ admin/               lapangan*, waktu*, harga*, pengguna*, pembatalan*, laporan
+├─ admin/               lapangan*, waktu*, harga*, pelanggan*, pengguna*, pembatalan*, laporan
 ├─ kasir/               jadwal, booking_form, booking_simpan, bayar_simpan,
 │                       selesai_proses, pembatalan_ajukan, pembatalan
 ├─ booking/             daftar, detail, nota   (dipakai admin & kasir)
@@ -49,6 +50,7 @@ futsal/
 ```
 Pola tiap modul: `xxx.php` (daftar) → `xxx_form.php` (tambah/ubah) → `xxx_proses.php` (simpan/hapus).
 Semua query SQL ditulis langsung di file yang memakainya (prepared statement `?`).
+Konfirmasi aksi memakai SweetAlert2 melalui atribut `data-confirm` pada elemen link atau form.
 
 ## Aturan Logika Penting
 - **Anti double booking**: sebelum simpan, lapangan dikunci (`SELECT ... FOR UPDATE`) lalu jam dicek tabrakan dengan booking lain yang bukan Cancel.

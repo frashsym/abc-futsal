@@ -1,7 +1,7 @@
 <?php
 // inc/sidebar.php - menu kiri. Isi menu berbeda untuk admin dan kasir.
 $menu_aktif = $menu_aktif ?? '';
-$master_aktif = in_array($menu_aktif, ['lapangan', 'waktu', 'harga'], true);
+$master_aktif = in_array($menu_aktif, ['lapangan', 'waktu', 'harga', 'pelanggan'], true);
 
 // Admin: hitung pengajuan pembatalan yang menunggu persetujuan (untuk badge merah)
 $jumlah_pengajuan = 0;
@@ -24,7 +24,7 @@ if ($user['level'] === 'admin') {
 
         <?php if ($user['level'] === 'admin'): ?>
             <li class="<?= $menu_aktif === 'pengguna' ? 'active' : '' ?>" style="--c:#7c5cff">
-                <a class="item" href="<?= BASE_URL ?>admin/pengguna.php"><span class="tile"><i class="bi bi-people"></i></span>Data User / Kasir</a>
+                <a class="item" href="<?= BASE_URL ?>admin/pengguna.php"><span class="tile"><i class="bi bi-people"></i></span>Data User</a>
             </li>
             <li class="<?= $master_aktif ? 'active' : '' ?>" style="--c:#ff8a3d">
                 <a class="item" data-bs-toggle="collapse" href="#menuMaster" role="button">
@@ -35,6 +35,7 @@ if ($user['level'] === 'admin') {
                     <li class="<?= $menu_aktif === 'lapangan' ? 'active' : '' ?>"><a href="<?= BASE_URL ?>admin/lapangan.php">Data Lapangan</a></li>
                     <li class="<?= $menu_aktif === 'waktu' ? 'active' : '' ?>"><a href="<?= BASE_URL ?>admin/waktu.php">Jam Operasional</a></li>
                     <li class="<?= $menu_aktif === 'harga' ? 'active' : '' ?>"><a href="<?= BASE_URL ?>admin/harga.php">Harga Sewa</a></li>
+                    <li class="<?= $menu_aktif === 'pelanggan' ? 'active' : '' ?>"><a href="<?= BASE_URL ?>admin/pelanggan.php">Data Pelanggan</a></li>
                 </ul>
             </li>
             <li class="<?= $menu_aktif === 'booking' ? 'active' : '' ?>" style="--c:#12b886">

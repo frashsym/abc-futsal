@@ -12,7 +12,7 @@ $db_name = 'futsal';
 
 // --- Pengaturan aplikasi ---
 // Nama folder di htdocs. Kalau folder kamu ganti nama, ubah di sini juga.
-define('BASE_URL', '/projek_futsal/');
+define('BASE_URL', '/futsal/');
 // Aturan DP: minimal berapa persen dari total harga
 define('DP_MINIMAL_PERSEN', 30);
 

@@ -30,15 +30,69 @@
     }, 6000);
   });
 
-  /* ----- 3. Konfirmasi: <a data-confirm="..."> atau <form data-confirm="..."> ----- */
+  /* ----- 3. Konfirmasi SweetAlert2: <a data-confirm="..."> atau <form data-confirm="..."> ----- */
+  var formTerkonfirmasi = new WeakSet();
+  function peringatan(pesan) {
+    if (!window.Swal) {
+      console.error("SweetAlert2 gagal dimuat; pesan tidak dapat ditampilkan.");
+      return;
+    }
+    window.Swal.fire({
+      title: "Periksa data",
+      text: pesan,
+      icon: "warning",
+      confirmButtonText: "Mengerti",
+    });
+  }
+
+  function konfirmasi(pesan) {
+    if (!window.Swal) {
+      console.error("SweetAlert2 gagal dimuat; aksi konfirmasi dibatalkan.");
+      return Promise.resolve(false);
+    }
+    return window.Swal.fire({
+      title: "Konfirmasi",
+      text: pesan,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, lanjutkan",
+      cancelButtonText: "Batal",
+      reverseButtons: true,
+      focusCancel: true,
+    }).then(function (hasil) {
+      return hasil.isConfirmed;
+    });
+  }
+
   document.addEventListener("click", function (e) {
     var el = e.target.closest("a[data-confirm]");
-    if (el && !window.confirm(el.getAttribute("data-confirm")))
-      e.preventDefault();
+    if (!el) return;
+    e.preventDefault();
+    konfirmasi(el.getAttribute("data-confirm")).then(function (setuju) {
+      if (setuju) window.location.href = el.href;
+    });
   });
   document.addEventListener("submit", function (e) {
-    var msg = e.target.getAttribute("data-confirm");
-    if (msg && !window.confirm(msg)) e.preventDefault();
+    var form = e.target;
+    var pesan = form.getAttribute("data-confirm");
+    if (!pesan) return;
+    if (formTerkonfirmasi.has(form)) {
+      formTerkonfirmasi.delete(form);
+      return;
+    }
+
+    e.preventDefault();
+    var tombolSubmit = e.submitter;
+    konfirmasi(pesan).then(function (setuju) {
+      if (!setuju || !form.reportValidity()) return;
+      if (typeof form.requestSubmit !== "function") {
+        console.error("Browser tidak mendukung form.requestSubmit().");
+        return;
+      }
+      formTerkonfirmasi.add(form);
+      if (tombolSubmit) form.requestSubmit(tombolSubmit);
+      else form.requestSubmit();
+    });
   });
 
   /* ----- 4. Cari di tabel: <input data-cari-tabel="#idTabel"> ----- */
@@ -182,12 +236,12 @@
       var minDp = Math.ceil((total * DP_PERSEN) / 100);
       if (!total) {
         e.preventDefault();
-        alert("Pilih lapangan dan jam yang tersedia dulu.");
+        peringatan("Pilih lapangan dan jam yang tersedia dulu.");
         return;
       }
       if (tipe.value === "DP" && (bayar < minDp || bayar >= total)) {
         e.preventDefault();
-        alert(
+        peringatan(
           "Nominal DP minimal " +
             rp(minDp) +
             " dan harus kurang dari total " +

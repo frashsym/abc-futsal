@@ -3,7 +3,7 @@
 $level_wajib = 'admin';
 require_once '../auth.php';
 
-$judul_halaman = 'Data User / Kasir';
+$judul_halaman = 'Data User';
 $menu_aktif    = 'pengguna';
 
 $daftar = $pdo->query("SELECT * FROM tb_pengguna ORDER BY level, nama_lengkap")->fetchAll();
